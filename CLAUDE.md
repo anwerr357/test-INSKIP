@@ -12,10 +12,10 @@ dossier parent : il concerne un autre projet, ignore-le.
 
 | Brique | Choix |
 |---|---|
-| Interface | React 18 + TypeScript, Vite |
+| Interface | React + TypeScript, Vite |
 | Données | Supabase (Postgres + Auth anonyme + RLS), projet dédié à ce cas pratique |
 | Tests | Vitest |
-| CI | GitHub Actions : lint, typecheck, tests à chaque push |
+| CI | GitHub Actions : lint (oxlint), typecheck, tests, build à chaque push |
 | Hébergement | Vercel |
 
 ## Règles non négociables

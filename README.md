@@ -11,7 +11,16 @@ _Captures à ajouter : liste des idées, fiche de notation, shortlist._
 
 ## Lancer l'outil
 
-_À compléter à l'étape 2 (socle)._
+Prérequis : Node 24 et npm.
+
+```bash
+git clone https://github.com/anwerr357/test-INSKIP.git && cd test-INSKIP
+npm install
+cp .env.example .env.local   # puis renseigner l'URL et la clé publique Supabase
+npm run dev
+```
+
+Vérifications : `npm run lint`, `npm run typecheck`, `npm test`.
 
 ## 1. Cadrage
 
@@ -92,6 +101,7 @@ _À compléter : configuration, ce qui manque avant de confier l'outil à Camill
 | Heure | Étape |
 |---|---|
 | 19:32 | Création du dépôt, cadrage, `CLAUDE.md` |
+| 19:54 | Socle Vite + React + TypeScript, Vitest, CI GitHub Actions, `.env.example` |
 
 ## 7. Suite et questions pour Camille
 
