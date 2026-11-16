@@ -102,6 +102,7 @@ _À compléter : configuration, ce qui manque avant de confier l'outil à Camill
 |---|---|
 | 19:32 | Création du dépôt, cadrage, `CLAUDE.md` |
 | 19:54 | Socle Vite + React + TypeScript, Vitest, CI GitHub Actions, `.env.example` |
+| 19:57 | Import du CSV et normalisation (dates, budgets, champs manquants), 37 tests |
 
 ## 7. Suite et questions pour Camille
 
