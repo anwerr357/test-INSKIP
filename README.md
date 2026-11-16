@@ -104,6 +104,7 @@ _À compléter : configuration, ce qui manque avant de confier l'outil à Camill
 | 19:54 | Socle Vite + React + TypeScript, Vitest, CI GitHub Actions, `.env.example` |
 | 19:57 | Import du CSV et normalisation (dates, budgets, champs manquants), tests sur les 40 lignes du fichier |
 | 20:00 | Détection des doublons : similarité de mots pondérée, seuil calibré sur le fichier, 5 paires proposées |
+| 20:06 | Notation : interface `Scorer`, modèle simulé, contrôle des réponses ; classement pondéré et shortlist |
 
 ## 7. Suite et questions pour Camille
 

@@ -41,7 +41,8 @@ const SYNONYMS: Record<string, string> = {
 // "compresseurs" de "compresseur" et "dictent" de "dictée". Volontairement grossier.
 function stem(word: string): string {
   if (word.length <= 4) return word
-  return word.replace(/(ements?|ations?|ives?|ifs?|ees?|ent|er|es|s|x|e)$/, '')
+  // Le pluriel d'abord, sinon "accidents" et "accident" n'aboutissent pas au même radical.
+  return word.replace(/[sx]$/, '').replace(/(ement|ation|ive|if|ee|ent|er|e)$/, '')
 }
 
 type Vector = Map<string, number>
