@@ -68,6 +68,7 @@ l'interface ni à la base : c'est ce qui la rend testable et réutilisable pour 
 | `challenges` | Un challenge client : nom, poids des 4 critères |
 | `ideas` | Une idée importée : champs d'origine, champs normalisés (date, budget), groupe de doublons |
 | `scores` | Les 4 notes d'une idée, la justification, le statut "proposée" ou "validée" |
+| `duplicate_pairs` | Les décisions de Camille sur les doublons proposés : confirmé ou écarté |
 
 Chaque ligne porte un `owner_id`. Une règle RLS limite la lecture et l'écriture à son
 propriétaire.
@@ -105,6 +106,7 @@ _À compléter : configuration, ce qui manque avant de confier l'outil à Camill
 | 19:57 | Import du CSV et normalisation (dates, budgets, champs manquants), tests sur les 40 lignes du fichier |
 | 20:00 | Détection des doublons : similarité de mots pondérée, seuil calibré sur le fichier, 5 paires proposées |
 | 20:06 | Notation : interface `Scorer`, modèle simulé, contrôle des réponses ; classement pondéré et shortlist |
+| 20:20 | Schéma Supabase et règles RLS (`supabase/migrations/0001_init.sql`) |
 
 ## 7. Suite et questions pour Camille
 
