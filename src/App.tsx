@@ -125,7 +125,7 @@ export default function App() {
           </div>
           {workspace && view && (
             <p className="progress" role="status">
-              <strong>{view.validated}</strong> {view.validated > 1 ? 'notes validées' : 'note validée'} sur {workspace.ideas.length}
+              <strong>{view.validated}</strong> {view.validated > 1 ? 'notes validées' : 'note validée'} sur {view.toReview}
             </p>
           )}
         </div>
@@ -219,6 +219,13 @@ function useWorkspaceView(workspace: Workspace | null) {
     // Pour un doublon écarté du classement : l'idée de son groupe qui, elle, est classée.
     const keptOf = new Map(groups.flatMap((group) => group.map((id) => [id, group.find((member) => rangOf.has(member))!] as const)))
 
+    const pendingWith = new Map<string, string[]>()
+    for (const pair of pairs) {
+      if (decisions[pairKey(pair.a, pair.b)]) continue
+      pendingWith.set(pair.a, [...(pendingWith.get(pair.a) ?? []), pair.b])
+      pendingWith.set(pair.b, [...(pendingWith.get(pair.b) ?? []), pair.a])
+    }
+
     const rows: IdeaRow[] = scored
       .map((idea) => {
         const rang = rangOf.get(idea.id) ?? null
@@ -228,6 +235,8 @@ function useWorkspaceView(workspace: Workspace | null) {
           total: totalOn20(scores[idea.id].scores, challenge.poids),
           rang,
           duplicateOf: rang === null ? (keptOf.get(idea.id) ?? null) : null,
+          regroupe: rang === null ? [] : (groups.find((group) => group.includes(idea.id)) ?? []).filter((id) => id !== idea.id),
+          doublonPossibleAvec: pendingWith.get(idea.id) ?? [],
         }
       })
       .sort((a, b) => (a.rang ?? Infinity) - (b.rang ?? Infinity) || a.idea.id.localeCompare(b.idea.id))
@@ -243,7 +252,9 @@ function useWorkspaceView(workspace: Workspace | null) {
       pairs,
       ideasById: new Map(ideas.map((idea) => [idea.id, idea])),
       pendingPairs: pairs.filter((pair) => !decisions[pairKey(pair.a, pair.b)]).length,
-      validated: scored.filter((idea) => scores[idea.id].statut === 'validee').length,
+      // Les doublons confirmés ne sont pas classés : ils ne comptent pas dans ce qui reste à relire.
+      toReview: rows.filter((row) => row.duplicateOf === null).length,
+      validated: rows.filter((row) => row.duplicateOf === null && row.score.statut === 'validee').length,
     }
   }, [workspace])
 }

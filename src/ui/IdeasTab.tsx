@@ -11,7 +11,14 @@ export type IdeaRow = {
   /** null pour un doublon confirmé, qui n'est pas classé séparément. */
   rang: number | null
   duplicateOf: string | null
+  /** Les doublons confirmés que cette idée représente dans le classement. */
+  regroupe: string[]
+  /** Les idées avec lesquelles un doublon est proposé et pas encore tranché. */
+  doublonPossibleAvec: string[]
 }
+
+// Un doublon confirmé n'est pas classé : sa note n'a pas besoin d'être relue.
+const toValidate = (row: IdeaRow) => row.score.statut === 'proposee' && row.duplicateOf === null
 
 type Props = {
   rows: IdeaRow[]
@@ -30,11 +37,13 @@ export function IdeasTab({ rows, weights, onSave }: Props) {
 
   const visible = useMemo(() => {
     const search = filters.search.trim().toLowerCase()
-    return rows.filter(({ idea, score }) => {
+    return rows.filter((row) => {
+      const { idea, score } = row
       if (filters.direction && (idea.direction ?? NOT_PROVIDED) !== filters.direction) return false
       if (filters.theme && (idea.theme ?? NOT_PROVIDED) !== filters.theme) return false
       if (filters.site && (idea.site ?? NOT_PROVIDED) !== filters.site) return false
-      if (filters.statut && score.statut !== filters.statut) return false
+      if (filters.statut === 'proposee' && !toValidate(row)) return false
+      if (filters.statut === 'validee' && score.statut !== 'validee') return false
       if (filters.incomplete && idea.manques.length === 0) return false
       if (search && !`${idea.id} ${idea.titre} ${idea.description ?? ''}`.toLowerCase().includes(search)) return false
       return true
@@ -49,7 +58,7 @@ export function IdeasTab({ rows, weights, onSave }: Props) {
   function nextToValidate(fromId: string): string | null {
     const start = visible.findIndex(({ idea }) => idea.id === fromId)
     const ordered = [...visible.slice(start + 1), ...visible.slice(0, Math.max(start, 0))]
-    return ordered.find(({ idea, score }) => idea.id !== fromId && score.statut === 'proposee')?.idea.id ?? null
+    return ordered.find((row) => row.idea.id !== fromId && toValidate(row))?.idea.id ?? null
   }
 
   const select = (label: string, key: 'direction' | 'theme' | 'site', valueOf: (idea: StoredIdea) => string | null) => (
@@ -131,7 +140,7 @@ export function IdeasTab({ rows, weights, onSave }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {visible.map(({ idea, score, total, rang, duplicateOf }) => (
+                {visible.map(({ idea, score, total, rang, duplicateOf, regroupe, doublonPossibleAvec }) => (
                   <tr key={idea.id} className={idea.id === selectedId ? 'selected' : ''} onClick={() => setSelectedId(idea.id)}>
                     <td className="num">{rang ?? '-'}</td>
                     <td>
@@ -140,6 +149,8 @@ export function IdeasTab({ rows, weights, onSave }: Props) {
                       </button>
                       {idea.manques.length > 0 && <span className="badge warning">À compléter</span>}
                       {duplicateOf && <span className="badge">Doublon de {duplicateOf}</span>}
+                      {regroupe.length > 0 && <span className="badge">Regroupe {regroupe.join(', ')}</span>}
+                      {doublonPossibleAvec.length > 0 && <span className="badge warning">Doublon possible</span>}
                     </td>
                     <td className="optional">{idea.direction ?? <span className="muted">{NOT_PROVIDED}</span>}</td>
                     <td className="optional">{idea.theme ?? <span className="muted">{NOT_PROVIDED}</span>}</td>
@@ -147,7 +158,7 @@ export function IdeasTab({ rows, weights, onSave }: Props) {
                     <td className="num"><strong>{formatTotal(total)}</strong></td>
                     <td>
                       <span className={`badge ${score.statut === 'validee' ? 'success' : 'neutral'}`}>
-                        {score.statut === 'validee' ? 'Validée' : 'À valider'}
+                        {score.statut === 'validee' ? 'Validée' : duplicateOf ? 'Non classée' : 'À valider'}
                       </span>
                     </td>
                   </tr>
@@ -165,6 +176,8 @@ export function IdeasTab({ rows, weights, onSave }: Props) {
           score={selected.score}
           weights={weights}
           duplicateOf={selected.duplicateOf}
+          regroupe={selected.regroupe}
+          doublonPossibleAvec={selected.doublonPossibleAvec}
           hasNext={nextToValidate(selected.idea.id) !== null}
           onClose={() => setSelectedId(null)}
           onSave={async (score, goNext) => {

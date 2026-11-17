@@ -10,6 +10,8 @@ type Props = {
   weights: Weights
   /** Renseigné quand l'idée est un doublon confirmé d'une autre, mieux notée. */
   duplicateOf: string | null
+  regroupe: string[]
+  doublonPossibleAvec: string[]
   hasNext: boolean
   onSave: (score: IdeaScore, goNext: boolean) => Promise<void>
   onClose: () => void
@@ -19,7 +21,7 @@ const SCALE = Array.from({ length: MAX_SCORE - MIN_SCORE + 1 }, (_, index) => MI
 
 // Le parent monte ce composant avec key={idea.id} : le brouillon repart de la note
 // enregistrée à chaque changement d'idée, sans effet à synchroniser.
-export function ScorePanel({ idea, score, weights, duplicateOf, hasNext, onSave, onClose }: Props) {
+export function ScorePanel({ idea, score, weights, duplicateOf, regroupe, doublonPossibleAvec, hasNext, onSave, onClose }: Props) {
   const [draft, setDraft] = useState(score.scores)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -74,7 +76,16 @@ export function ScorePanel({ idea, score, weights, duplicateOf, hasNext, onSave,
       )}
       {duplicateOf && (
         <p className="notice">
-          Doublon confirmé de {duplicateOf}, mieux notée : cette idée n'est pas classée séparément.
+          Doublon confirmé de {duplicateOf}, mieux notée : cette idée n'est pas classée et sa note n'a pas besoin
+          d'être validée.
+        </p>
+      )}
+      {regroupe.length > 0 && (
+        <p className="notice">Cette idée représente aussi {regroupe.join(', ')}, que vous avez confirmée comme doublon.</p>
+      )}
+      {doublonPossibleAvec.length > 0 && (
+        <p className="notice warning">
+          Doublon possible avec {doublonPossibleAvec.join(', ')}. À trancher dans l'onglet Doublons.
         </p>
       )}
 
