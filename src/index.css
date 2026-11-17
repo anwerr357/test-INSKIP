@@ -134,3 +134,29 @@ tbody tr:last-child td { border-bottom: 0; }
   .optional { display: none; }
   .pair-ideas { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Shortlist */
+.section-title { margin: 1.5rem 0 0.6rem; }
+.distribution { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.5rem 1.5rem; padding: 0.4rem 1rem 1rem; margin: 1rem 0; }
+.distribution .badge { margin: 0 0.35rem 0.35rem 0; }
+.client-doc { padding: 1.5rem 1.75rem; max-width: 60rem; }
+.client-doc > header { border-bottom: 2px solid var(--navy); padding-bottom: 0.9rem; }
+.client-list { list-style: none; counter-reset: rank; margin: 0; padding: 0; }
+.client-list > li { counter-increment: rank; padding: 1rem 0; border-bottom: 1px solid var(--border); break-inside: avoid; }
+.client-list > li:last-child { border-bottom: 0; }
+.client-item-header { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.client-item-header h3 { text-transform: none; letter-spacing: 0; font-size: 1.08rem; color: var(--ink); margin: 0; }
+.client-item-header h3::before { content: counter(rank) '. '; color: var(--accent); }
+.client-list p { margin-top: 0.35rem; }
+.client-scores { display: flex; flex-wrap: wrap; gap: 0.3rem 1.2rem; font-size: 0.9rem; }
+.client-list .link { margin: 0.5rem 0 0; }
+tr.static { cursor: default; }
+tr.static:hover { background: none; }
+
+/* À l'impression, seul le document pour le client reste. */
+@media print {
+  .app-header, .tabs, .notice, .no-print { display: none !important; }
+  :root { background: #fff; font-size: 12px; }
+  main { padding: 0; }
+  .client-doc { border: 0; padding: 0; max-width: none; }
+}

@@ -206,6 +206,22 @@ export async function saveDecision(challengeId: string, a: string, b: string, de
   )
 }
 
+export async function setShortlisted(ideaDbId: string, shortlisted: boolean): Promise<void> {
+  check(
+    await db().from('ideas').update({ shortlist: shortlisted }).eq('id', ideaDbId),
+    "L'enregistrement de la shortlist a échoué.",
+  )
+}
+
+/** Remplace toute la shortlist du challenge par les idées données. */
+export async function replaceShortlist(challengeId: string, ideaDbIds: string[]): Promise<void> {
+  const message = "L'enregistrement de la shortlist a échoué."
+  check(await db().from('ideas').update({ shortlist: false }).eq('challenge_id', challengeId).eq('shortlist', true), message)
+  if (ideaDbIds.length > 0) {
+    check(await db().from('ideas').update({ shortlist: true }).in('id', ideaDbIds), message)
+  }
+}
+
 export async function deleteWorkspace(challengeId: string): Promise<void> {
   check(await db().from('challenges').delete().eq('id', challengeId), 'La suppression a échoué.')
 }

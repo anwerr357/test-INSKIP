@@ -5,8 +5,10 @@ import {
   ensureSession,
   loadWorkspace,
   pairKey,
+  replaceShortlist,
   saveDecision,
   saveScore,
+  setShortlisted,
   type Decision,
   type IdeaScore,
   type StoredIdea,
@@ -15,11 +17,12 @@ import {
 import { findDuplicatePairs, groupDuplicates, type DuplicatePair } from './domain/duplicates'
 import { importIdeas, type RejectedRow } from './domain/importIdeas'
 import { MockScorer } from './domain/mockScorer'
-import { rankIdeas, totalOn20 } from './domain/ranking'
+import { rankIdeas, suggestShortlist, totalOn20 } from './domain/ranking'
 import { toScoringInput, type Scorer } from './domain/scoring'
 import { DuplicatesTab } from './ui/DuplicatesTab'
 import { IdeasTab, type IdeaRow } from './ui/IdeasTab'
 import { ImportScreen } from './ui/ImportScreen'
+import { ShortlistTab } from './ui/ShortlistTab'
 
 // Le modèle de notation. Aujourd'hui simulé ; un vrai modèle se branche ici, derrière la
 // même interface Scorer, sans toucher aux écrans.
@@ -30,7 +33,7 @@ type Boot =
   | { status: 'error'; message: string }
   | { status: 'ready'; workspace: Workspace | null }
 
-type Tab = 'idees' | 'doublons'
+type Tab = 'idees' | 'doublons' | 'shortlist'
 
 async function openWorkspace(): Promise<Boot> {
   try {
@@ -80,6 +83,21 @@ export default function App() {
     if (!workspace) return
     await saveDecision(workspace.challenge.id, pair.a, pair.b, decision)
     update((current) => ({ ...current, decisions: { ...current.decisions, [pairKey(pair.a, pair.b)]: decision } }))
+  }
+
+  async function handleToggleShortlist(idea: StoredIdea, shortlisted: boolean) {
+    await setShortlisted(idea.dbId, shortlisted)
+    update((current) => ({
+      ...current,
+      ideas: current.ideas.map((other) => (other.id === idea.id ? { ...other, shortlist: shortlisted } : other)),
+    }))
+  }
+
+  async function handleSuggestShortlist() {
+    if (!workspace || !view) return
+    const chosen = new Set(view.suggestion)
+    await replaceShortlist(workspace.challenge.id, workspace.ideas.filter((idea) => chosen.has(idea.id)).map((idea) => idea.dbId))
+    update((current) => ({ ...current, ideas: current.ideas.map((idea) => ({ ...idea, shortlist: chosen.has(idea.id) })) }))
   }
 
   async function handleDelete() {
@@ -152,12 +170,25 @@ export default function App() {
               <button type="button" className={tab === 'doublons' ? 'active' : ''} aria-current={tab === 'doublons'} onClick={() => setTab('doublons')}>
                 Doublons {view.pendingPairs > 0 && <span className="pill attention">{view.pendingPairs} à examiner</span>}
               </button>
+              <button type="button" className={tab === 'shortlist' ? 'active' : ''} aria-current={tab === 'shortlist'} onClick={() => setTab('shortlist')}>
+                Shortlist <span className="pill">{view.shortlist.length}</span>
+              </button>
               <button type="button" className="link danger" onClick={handleDelete}>
                 Supprimer ce challenge
               </button>
             </nav>
 
             {tab === 'idees' && <IdeasTab rows={view.rows} weights={workspace.challenge.poids} onSave={handleSaveScore} />}
+            {tab === 'shortlist' && (
+              <ShortlistTab
+                challengeName={workspace.challenge.nom}
+                shortlist={view.shortlist}
+                candidates={view.candidates}
+                suggestionSize={view.suggestion.length}
+                onToggle={handleToggleShortlist}
+                onSuggest={handleSuggestShortlist}
+              />
+            )}
             {tab === 'doublons' && (
               <DuplicatesTab pairs={view.pairs} ideasById={view.ideasById} decisions={workspace.decisions} onDecide={handleDecide} />
             )}
@@ -201,8 +232,14 @@ function useWorkspaceView(workspace: Workspace | null) {
       })
       .sort((a, b) => (a.rang ?? Infinity) - (b.rang ?? Infinity) || a.idea.id.localeCompare(b.idea.id))
 
+    // La shortlist ne contient que des idées classées dont Camille a validé la note.
+    const eligible = rows.filter((row) => row.rang !== null && row.score.statut === 'validee')
+
     return {
       rows,
+      shortlist: eligible.filter((row) => row.idea.shortlist),
+      candidates: eligible.filter((row) => !row.idea.shortlist),
+      suggestion: suggestShortlist(ranked).map((idea) => idea.id),
       pairs,
       ideasById: new Map(ideas.map((idea) => [idea.id, idea])),
       pendingPairs: pairs.filter((pair) => !decisions[pairKey(pair.a, pair.b)]).length,

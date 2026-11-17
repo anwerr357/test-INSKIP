@@ -133,7 +133,7 @@ export function IdeasTab({ rows, weights, onSave }: Props) {
               <tbody>
                 {visible.map(({ idea, score, total, rang, duplicateOf }) => (
                   <tr key={idea.id} className={idea.id === selectedId ? 'selected' : ''} onClick={() => setSelectedId(idea.id)}>
-                    <td className="num">{rang ?? '–'}</td>
+                    <td className="num">{rang ?? '-'}</td>
                     <td>
                       <button type="button" className="row-title" onClick={() => setSelectedId(idea.id)}>
                         <span className="ref">{idea.id}</span> {idea.titre}
