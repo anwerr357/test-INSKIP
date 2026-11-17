@@ -108,10 +108,9 @@ export function ScorePanel({ idea, score, weights, duplicateOf, regroupe, doublo
       <p>{idea.benefices ?? <span className="muted">Non renseignés.</span>}</p>
 
       <h3>Mes remarques</h3>
-      <label className="field remark">
-        <span>Ce que vous en pensez, pour vous en souvenir. Vous seule les voyez : elles ne partent ni chez le client, ni vers l'IA.</span>
-        <textarea value={remark} onChange={(event) => setRemark(event.target.value)} rows={3} maxLength={2000} />
-      </label>
+      <div className="field remark">
+        <textarea aria-label="Mes remarques" value={remark} onChange={(event) => setRemark(event.target.value)} rows={3} maxLength={2000} />
+      </div>
       <div className="actions remark-actions">
         <button type="button" className="button" disabled={remarkState === 'saving' || remark.trim() === idea.remarque} onClick={saveRemark}>
           {remarkState === 'saving' ? 'Enregistrement…' : 'Enregistrer mes remarques'}

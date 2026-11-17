@@ -169,7 +169,6 @@ tr.static:hover { background: none; }
 .header-button:hover:not(:disabled) { border-color: #fff; color: #fff; }
 
 /* Remarques personnelles */
-.remark span { font-weight: 400; }
 .remark textarea { font: inherit; color: var(--ink); padding: 0.5rem 0.6rem; border: 1px solid var(--border); border-radius: 8px; resize: vertical; }
 .remark-actions { margin-top: 0.5rem; align-items: center; }
 .alert-inline { color: var(--danger); font-weight: 600; font-size: 0.9rem; }
