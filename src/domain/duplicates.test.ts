@@ -43,7 +43,7 @@ describe("doublons de l'export Hexavia", () => {
 
   it('montre les mots communs pour justifier la proposition', () => {
     const pair = pairs.find((p) => p.a === 'IDEA-001' && p.b === 'IDEA-007')!
-    expect(pair.motsCommuns).toEqual(expect.arrayContaining(['capteur', 'compresseur']))
+    expect(pair.motsCommuns).toEqual(expect.arrayContaining(['capteurs', 'compresseurs', 'panne']))
   })
 })
 

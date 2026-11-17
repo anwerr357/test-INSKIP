@@ -45,6 +45,19 @@ export type ImportResult = { ideas: Idea[]; rejets: RejectedRow[] }
 /** Erreur qui empêche tout l'import. Son message est affiché tel quel à l'utilisatrice. */
 export class ImportError extends Error {}
 
+/**
+ * Octets du fichier vers du texte. Un export récent est en UTF-8 ; un CSV enregistré par un
+ * ancien Excel français est en Windows-1252, et ses accents deviendraient illisibles.
+ * On essaie donc UTF-8 en mode strict, puis Windows-1252 si le fichier n'est pas de l'UTF-8.
+ */
+export function decodeCsv(bytes: ArrayBuffer): string {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+  } catch {
+    return new TextDecoder('windows-1252').decode(bytes)
+  }
+}
+
 export function importIdeas(csv: string): ImportResult {
   // Excel enregistre les CSV en UTF-8 avec une marque d'ordre d'octets (BOM) : sans ce
   // retrait, la première colonne s'appellerait "\uFEFFid" et serait déclarée manquante.

@@ -14,18 +14,29 @@ const STOPWORDS = new Set(
    the of to and a an for in on with under from`.split(/\s+/),
 )
 
-/** Minuscules, sans accents, sans ponctuation, sans mots vides, réduits à leur radical. */
-export function tokenize(text: string): string[] {
+type Token = { stem: string; word: string }
+
+/**
+ * Découpe un texte en mots porteurs de sens. Chaque mot est comparé par son radical
+ * (minuscules, sans accents, sans terminaison), mais on garde le mot tel qu'il est écrit
+ * pour pouvoir le montrer à Camille.
+ */
+function tokens(text: string): Token[] {
   return text
     .toLowerCase()
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '') // retire les accents, séparés des lettres par normalize('NFD')
-    .replace(/[^a-z0-9]+/g, ' ')
     .replace(/comptes? rendus?/g, 'rapport')
-    .split(' ')
-    .filter((word) => word.length > 1 && !STOPWORDS.has(word))
-    .map(stem)
-    .map((word) => SYNONYMS[word] ?? word)
+    .split(/[^\p{L}\p{N}]+/u)
+    .map((word) => ({ word, plain: word.normalize('NFD').replace(/\p{M}/gu, '') }))
+    .filter(({ plain }) => plain.length > 1 && !STOPWORDS.has(plain))
+    .map(({ word, plain }) => {
+      const stemmed = stem(plain)
+      return { word, stem: SYNONYMS[stemmed] ?? stemmed }
+    })
+}
+
+/** Les radicaux d'un texte, sans les mots vides. */
+export function tokenize(text: string): string[] {
+  return tokens(text).map((token) => token.stem)
 }
 
 // Une comparaison de mots ne voit pas que "chatbot" et "assistant" désignent la même chose,
@@ -47,15 +58,19 @@ function stem(word: string): string {
 
 type Vector = Map<string, number>
 
-function toVector(idea: Idea): Vector {
+function toVector(idea: Idea): { vector: Vector; words: Map<string, string> } {
   const vector: Vector = new Map()
+  const words = new Map<string, string>()
+  const title = tokens(idea.titre)
   // Le titre résume l'idée : ses mots comptent double.
-  const words = [...tokenize(idea.titre), ...tokenize(idea.titre), ...tokenize(idea.description ?? '')]
-  for (const word of words) vector.set(word, (vector.get(word) ?? 0) + 1)
+  for (const { stem, word } of [...title, ...title, ...tokens(idea.description ?? '')]) {
+    vector.set(stem, (vector.get(stem) ?? 0) + 1)
+    if (!words.has(stem)) words.set(stem, word)
+  }
   // Fréquence amortie : un mot répété cinq fois ne compte pas cinq fois plus, sinon une
   // idée longue écrase les autres.
-  for (const [word, count] of vector) vector.set(word, 1 + Math.log(count))
-  return vector
+  for (const [stem, count] of vector) vector.set(stem, 1 + Math.log(count))
+  return { vector, words }
 }
 
 function cosine(a: Vector, b: Vector): number {
@@ -71,6 +86,7 @@ export type DuplicatePair = {
   b: string
   /** Similarité de 0 (rien en commun) à 1 (même texte). */
   score: number
+  /** Les mots partagés, tels qu'écrits dans la première idée : la raison de la proposition. */
   motsCommuns: string[]
 }
 
@@ -86,11 +102,11 @@ export function findDuplicatePairs(ideas: Idea[], threshold = DUPLICATE_THRESHOL
 
   // Poids d'un mot = rareté dans le lot (IDF). Un mot présent partout ne distingue rien.
   const documentCount = new Map<string, number>()
-  for (const vector of raw) for (const word of vector.keys()) documentCount.set(word, (documentCount.get(word) ?? 0) + 1)
-  const weighted = raw.map((vector) => {
+  for (const { vector } of raw) for (const stem of vector.keys()) documentCount.set(stem, (documentCount.get(stem) ?? 0) + 1)
+  const weighted = raw.map(({ vector }) => {
     const result: Vector = new Map()
-    for (const [word, count] of vector) {
-      result.set(word, count * Math.log(1 + ideas.length / documentCount.get(word)!))
+    for (const [stem, count] of vector) {
+      result.set(stem, count * Math.log(1 + ideas.length / documentCount.get(stem)!))
     }
     return result
   })
@@ -100,7 +116,7 @@ export function findDuplicatePairs(ideas: Idea[], threshold = DUPLICATE_THRESHOL
     for (let j = i + 1; j < ideas.length; j++) {
       const score = cosine(weighted[i], weighted[j])
       if (score < threshold) continue
-      const motsCommuns = [...raw[i].keys()].filter((word) => raw[j].has(word))
+      const motsCommuns = [...raw[i].words].filter(([stem]) => raw[j].vector.has(stem)).map(([, word]) => word)
       pairs.push({ a: ideas[i].id, b: ideas[j].id, score: Math.round(score * 100) / 100, motsCommuns })
     }
   }

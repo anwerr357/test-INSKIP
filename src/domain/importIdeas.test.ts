@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import hexaviaCsv from '../../data/idees_hexavia.csv?raw'
-import { ImportError, importIdeas } from './importIdeas'
+import { decodeCsv, ImportError, importIdeas } from './importIdeas'
 
 const HEADER = 'id;date_depot;prenom;nom;direction;site;theme;titre;description;benefices_attendus;budget_estime'
 const row = (id: string, titre = 'Une idée') => `${id};2026-09-15;A;B;RH;Lyon;Process;${titre};Texte;Gain;10 000 €`
@@ -84,5 +84,17 @@ describe('import : fichiers imparfaits', () => {
   it('refuse un fichier vide ou sans idée', () => {
     expect(() => importIdeas('')).toThrow('Le fichier est vide.')
     expect(() => importIdeas(HEADER)).toThrow("Aucune idée n'a pu être lue dans ce fichier.")
+  })
+})
+
+describe('decodeCsv', () => {
+  it('lit un fichier UTF-8', () => {
+    expect(decodeCsv(new TextEncoder().encode('Énergie').buffer)).toBe('Énergie')
+  })
+
+  it('lit un fichier Windows-1252 enregistré par un ancien Excel', () => {
+    // "Énergie" en Windows-1252 : É = 0xC9, ce qui n'est pas de l'UTF-8 valide.
+    const bytes = new Uint8Array([0xc9, 0x6e, 0x65, 0x72, 0x67, 0x69, 0x65])
+    expect(decodeCsv(bytes.buffer)).toBe('Énergie')
   })
 })

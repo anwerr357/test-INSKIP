@@ -101,14 +101,15 @@ _À compléter : configuration, ce qui manque avant de confier l'outil à Camill
 
 | Heure | Étape |
 |---|---|
-| 19:32 | Création du dépôt, cadrage, `CLAUDE.md` |
+| 16/11, 19:32 | Création du dépôt, cadrage, `CLAUDE.md` |
 | 19:54 | Socle Vite + React + TypeScript, Vitest, CI GitHub Actions, `.env.example` |
 | 19:57 | Import du CSV et normalisation (dates, budgets, champs manquants), tests sur les 40 lignes du fichier |
 | 20:00 | Détection des doublons : similarité de mots pondérée, seuil calibré sur le fichier, 5 paires proposées |
 | 20:06 | Notation : interface `Scorer`, modèle simulé, contrôle des réponses ; classement pondéré et shortlist |
 | 20:20 | Schéma Supabase et règles RLS (`supabase/migrations/0001_init.sql`) |
-| 21:05 | Test des règles RLS avec deux utilisateurs : un trou trouvé et corrigé (`0002`), script `scripts/test-rls.sh` |
-| 21:20 | Première mise en ligne sur Vercel |
+| 20:45 | Test des règles RLS avec deux utilisateurs : un trou trouvé et corrigé (`0002`), script `scripts/test-rls.sh` |
+| Lendemain, 11:00 | Première mise en ligne sur Vercel |
+| 11:10 | Interface branchée sur Supabase : import, liste filtrable, fiche de notation, doublons |
 
 ## 7. Suite et questions pour Camille
 
