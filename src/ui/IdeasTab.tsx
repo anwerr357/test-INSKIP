@@ -24,6 +24,7 @@ type Props = {
   rows: IdeaRow[]
   weights: Weights
   onSave: (idea: StoredIdea, score: IdeaScore) => Promise<void>
+  onSaveRemark: (idea: StoredIdea, remarque: string) => Promise<void>
 }
 
 const NO_FILTERS = { direction: '', theme: '', site: '', statut: '', incomplete: false, search: '' }
@@ -31,7 +32,7 @@ const NO_FILTERS = { direction: '', theme: '', site: '', statut: '', incomplete:
 const optionsOf = (rows: IdeaRow[], valueOf: (idea: StoredIdea) => string | null) =>
   [...new Set(rows.map(({ idea }) => valueOf(idea) ?? NOT_PROVIDED))].sort((a, b) => a.localeCompare(b, 'fr'))
 
-export function IdeasTab({ rows, weights, onSave }: Props) {
+export function IdeasTab({ rows, weights, onSave, onSaveRemark }: Props) {
   const [filters, setFilters] = useState(NO_FILTERS)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
@@ -151,6 +152,7 @@ export function IdeasTab({ rows, weights, onSave }: Props) {
                       {duplicateOf && <span className="badge">Doublon de {duplicateOf}</span>}
                       {regroupe.length > 0 && <span className="badge">Regroupe {regroupe.join(', ')}</span>}
                       {doublonPossibleAvec.length > 0 && <span className="badge warning">Doublon possible</span>}
+                      {idea.remarque && <span className="badge neutral">Remarque</span>}
                     </td>
                     <td className="optional">{idea.direction ?? <span className="muted">{NOT_PROVIDED}</span>}</td>
                     <td className="optional">{idea.theme ?? <span className="muted">{NOT_PROVIDED}</span>}</td>
@@ -180,6 +182,7 @@ export function IdeasTab({ rows, weights, onSave }: Props) {
           doublonPossibleAvec={selected.doublonPossibleAvec}
           hasNext={nextToValidate(selected.idea.id) !== null}
           onClose={() => setSelectedId(null)}
+          onSaveRemark={(remarque) => onSaveRemark(selected.idea, remarque)}
           onSave={async (score, goNext) => {
             const next = goNext ? nextToValidate(selected.idea.id) : null
             await onSave(selected.idea, score)

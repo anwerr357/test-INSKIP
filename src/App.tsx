@@ -7,6 +7,7 @@ import {
   pairKey,
   replaceShortlist,
   saveDecision,
+  saveRemark,
   saveScore,
   setShortlisted,
   signIn,
@@ -92,6 +93,14 @@ export default function App() {
   async function handleSaveScore(idea: StoredIdea, score: IdeaScore) {
     await saveScore(idea.dbId, score)
     update((current) => ({ ...current, scores: { ...current.scores, [idea.id]: score } }))
+  }
+
+  async function handleSaveRemark(idea: StoredIdea, remarque: string) {
+    await saveRemark(idea.dbId, remarque)
+    update((current) => ({
+      ...current,
+      ideas: current.ideas.map((other) => (other.id === idea.id ? { ...other, remarque: remarque.trim() } : other)),
+    }))
   }
 
   async function handleDecide(pair: DuplicatePair, decision: Decision) {
@@ -200,7 +209,7 @@ export default function App() {
               </button>
             </nav>
 
-            {tab === 'idees' && <IdeasTab rows={view.rows} weights={workspace.challenge.poids} onSave={handleSaveScore} />}
+            {tab === 'idees' && <IdeasTab rows={view.rows} weights={workspace.challenge.poids} onSave={handleSaveScore} onSaveRemark={handleSaveRemark} />}
             {tab === 'shortlist' && (
               <ShortlistTab
                 challengeName={workspace.challenge.nom}

@@ -7,7 +7,12 @@ import { supabase } from '../lib/supabase'
 // Seul fichier qui parle à Supabase. Le reste de l'application manipule les types du
 // domaine (Idea, ScoreProposal) et ignore les noms de colonnes.
 
-export type StoredIdea = Idea & { dbId: string; shortlist: boolean }
+export type StoredIdea = Idea & {
+  dbId: string
+  shortlist: boolean
+  /** Remarques personnelles de Camille. Jamais exportées, jamais envoyées au modèle. */
+  remarque: string
+}
 export type IdeaScore = ScoreProposal & { statut: ScoreStatus }
 export type Decision = 'confirmee' | 'ecartee'
 
@@ -86,6 +91,7 @@ type IdeaRow = {
   budget_euros: number | null
   manques: MissingField[]
   shortlist: boolean
+  remarque: string | null
   scores: ScoreRow | ScoreRow[] | null
 }
 
@@ -134,6 +140,7 @@ function fromIdeaRow(row: IdeaRow): StoredIdea {
     budgetEuros: row.budget_euros,
     manques: row.manques,
     shortlist: row.shortlist,
+    remarque: row.remarque ?? '',
   }
 }
 
@@ -216,6 +223,13 @@ export async function saveDecision(challengeId: string, a: string, b: string, de
   check(
     await db().from('duplicate_pairs').upsert({ challenge_id: challengeId, ref_a: a, ref_b: b, decision }),
     "L'enregistrement de votre décision a échoué.",
+  )
+}
+
+export async function saveRemark(ideaDbId: string, remarque: string): Promise<void> {
+  check(
+    await db().from('ideas').update({ remarque: remarque.trim() || null }).eq('id', ideaDbId),
+    "L'enregistrement de vos remarques a échoué.",
   )
 }
 

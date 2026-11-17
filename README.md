@@ -27,7 +27,7 @@ cp .env.example .env.local   # URL et clé publique Supabase
 npm run dev
 ```
 
-Supabase, une seule fois : exécuter les deux fichiers de `supabase/migrations/` dans le SQL
+Supabase, une seule fois : exécuter les trois fichiers de `supabase/migrations/` dans le SQL
 Editor, puis créer un utilisateur (Authentication > Users > Add user). Désactiver les
 inscriptions libres et la connexion anonyme (Authentication > Sign In / Providers).
 
@@ -56,7 +56,7 @@ proposée par l'IA qu'elle corrige, les doublons, une shortlist d'environ 8 idé
 | Noms des auteurs | Visibles pour Camille. Hors de l'export, sauf case cochée. |
 | Accès à l'outil | Un compte, créé par nous. Pas d'inscription libre : ce sont des données de salariés. |
 
-**V1 :** import, liste filtrable, notation, doublons, classement, shortlist.
+**V1 :** import, liste filtrable, notation, remarques personnelles, doublons, classement, shortlist.
 
 **Plus tard :** vrai modèle d'IA, partage entre consultants, réglage des poids à l'écran.
 
@@ -69,7 +69,8 @@ Pas de serveur à moi. Le navigateur parle à Supabase.
 - `src/data/store.ts` : le seul fichier qui parle à la base.
 - `src/ui/` : les écrans.
 
-Quatre tables : `challenges`, `ideas`, `scores`, `duplicate_pairs`.
+Quatre tables : `challenges`, `ideas`, `scores`, `duplicate_pairs`. Les remarques de Camille
+sont une colonne de `ideas`, jamais exportée ni envoyée au modèle.
 
 Mes choix :
 
@@ -172,6 +173,7 @@ Ce qui manque avant de donner l'outil à Camille :
 | 11:25 | Shortlist et exports |
 | 11:35 | Étiquettes de doublon, après essai de l'outil |
 | 11:45 | Connexion par e-mail et mot de passe à la place de l'accès ouvert |
+| 12:05 | Remarques personnelles de Camille sur chaque idée |
 
 ## 7. Suite et questions pour Camille
 

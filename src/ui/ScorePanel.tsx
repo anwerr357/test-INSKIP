@@ -14,6 +14,7 @@ type Props = {
   doublonPossibleAvec: string[]
   hasNext: boolean
   onSave: (score: IdeaScore, goNext: boolean) => Promise<void>
+  onSaveRemark: (remarque: string) => Promise<void>
   onClose: () => void
 }
 
@@ -21,10 +22,12 @@ const SCALE = Array.from({ length: MAX_SCORE - MIN_SCORE + 1 }, (_, index) => MI
 
 // Le parent monte ce composant avec key={idea.id} : le brouillon repart de la note
 // enregistrée à chaque changement d'idée, sans effet à synchroniser.
-export function ScorePanel({ idea, score, weights, duplicateOf, regroupe, doublonPossibleAvec, hasNext, onSave, onClose }: Props) {
+export function ScorePanel({ idea, score, weights, duplicateOf, regroupe, doublonPossibleAvec, hasNext, onSave, onSaveRemark, onClose }: Props) {
   const [draft, setDraft] = useState(score.scores)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [remark, setRemark] = useState(idea.remarque)
+  const [remarkState, setRemarkState] = useState<'idle' | 'saving' | 'error'>('idle')
 
   const changed = CRITERIA.some(({ key }) => draft[key] !== score.scores[key])
   const validated = score.statut === 'validee'
@@ -38,6 +41,16 @@ export function ScorePanel({ idea, score, weights, duplicateOf, regroupe, doublo
       setError(cause instanceof Error ? cause.message : "L'enregistrement a échoué.")
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function saveRemark() {
+    setRemarkState('saving')
+    try {
+      await onSaveRemark(remark)
+      setRemarkState('idle')
+    } catch {
+      setRemarkState('error')
     }
   }
 
@@ -93,6 +106,19 @@ export function ScorePanel({ idea, score, weights, duplicateOf, regroupe, doublo
       <p>{idea.description ?? <span className="muted">Aucune description.</span>}</p>
       <h3>Bénéfices attendus</h3>
       <p>{idea.benefices ?? <span className="muted">Non renseignés.</span>}</p>
+
+      <h3>Mes remarques</h3>
+      <label className="field remark">
+        <span>Ce que vous en pensez, pour vous en souvenir. Vous seule les voyez : elles ne partent ni chez le client, ni vers l'IA.</span>
+        <textarea value={remark} onChange={(event) => setRemark(event.target.value)} rows={3} maxLength={2000} />
+      </label>
+      <div className="actions remark-actions">
+        <button type="button" className="button" disabled={remarkState === 'saving' || remark.trim() === idea.remarque} onClick={saveRemark}>
+          {remarkState === 'saving' ? 'Enregistrement…' : 'Enregistrer mes remarques'}
+        </button>
+        {remarkState === 'idle' && idea.remarque && remark.trim() === idea.remarque && <span className="muted small">Enregistrées.</span>}
+        {remarkState === 'error' && <span role="alert" className="alert-inline">L'enregistrement a échoué. Réessayez.</span>}
+      </div>
 
       <h3>Notation</h3>
       <p className="muted small">
