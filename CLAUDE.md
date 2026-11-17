@@ -13,7 +13,7 @@ dossier parent : il concerne un autre projet, ignore-le.
 | Brique | Choix |
 |---|---|
 | Interface | React + TypeScript, Vite |
-| Données | Supabase (Postgres + Auth anonyme + RLS), projet dédié à ce cas pratique |
+| Données | Supabase (Postgres + Auth e-mail et mot de passe + RLS), projet dédié à ce cas pratique |
 | Tests | Vitest |
 | CI | GitHub Actions : lint (oxlint), typecheck, tests, build à chaque push |
 | Hébergement | Vercel |

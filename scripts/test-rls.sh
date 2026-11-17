@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
-# Vérifie les règles RLS sur le vrai projet Supabase, avec deux utilisateurs anonymes A et B.
-# Usage : ./scripts/test-rls.sh   (lit VITE_SUPABASE_URL et VITE_SUPABASE_PUBLISHABLE_KEY dans .env)
-# Les lignes créées sont supprimées à la fin. Les deux utilisateurs anonymes restent dans
-# Authentication > Users : la clé publique ne permet pas de les supprimer.
+# Vérifie les règles RLS sur le vrai projet Supabase, avec deux comptes A et B.
+# Usage : ./scripts/test-rls.sh
+# Lit dans .env : VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY, et deux comptes de test
+# créés dans Supabase (Authentication > Users) : RLS_A_EMAIL, RLS_A_PASSWORD, RLS_B_EMAIL,
+# RLS_B_PASSWORD. Utiliser des comptes réservés aux tests, pas celui de Camille.
+# Les lignes créées sont supprimées à la fin.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 set -a; . ./.env; set +a
 U=$VITE_SUPABASE_URL; K=$VITE_SUPABASE_PUBLISHABLE_KEY
 fail=0
 
-signup() {
-  curl -s -m 15 -X POST -H "apikey: $K" -H 'Content-Type: application/json' -d '{}' "$U/auth/v1/signup" |
+: "${RLS_A_EMAIL:?Renseignez RLS_A_EMAIL, RLS_A_PASSWORD, RLS_B_EMAIL et RLS_B_PASSWORD dans .env}"
+
+login() { # login e-mail mot-de-passe
+  python3 -I -c "import json,sys; print(json.dumps({'email': sys.argv[1], 'password': sys.argv[2]}))" "$1" "$2" |
+    curl -s -m 15 -X POST -H "apikey: $K" -H 'Content-Type: application/json' -d @- "$U/auth/v1/token?grant_type=password" |
     python3 -I -c "import sys,json; print(json.load(sys.stdin)['access_token'])"
 }
 req() { local tok=$1; shift; curl -s -m 15 -H "apikey: $K" -H "Authorization: Bearer $tok" -H 'Content-Type: application/json' "$@"; }
@@ -20,7 +25,7 @@ check() { # check "libellé" "obtenu" "attendu"
   if [ "$2" = "$3" ]; then echo "ok    $1"; else echo "ÉCHEC $1 : obtenu '$2', attendu '$3'"; fail=1; fi
 }
 
-A=$(signup); B=$(signup)
+A=$(login "$RLS_A_EMAIL" "$RLS_A_PASSWORD"); B=$(login "$RLS_B_EMAIL" "$RLS_B_PASSWORD")
 J='{"impact":"a","faisabilite":"a","alignement":"a","innovation":"a"}'
 P='{"impact":1,"faisabilite":1,"alignement":1,"innovation":1}'
 
@@ -46,6 +51,7 @@ check "B ne peut pas ajouter une idée au challenge de A" "$(status "$B" -X POST
 check "B ne peut pas ajouter une décision de doublon au challenge de A" "$(status "$B" -X POST -d "{\"challenge_id\":\"$CID\",\"ref_a\":\"a\",\"ref_b\":\"b\",\"decision\":\"confirmee\"}" "$U/rest/v1/duplicate_pairs")" 403
 check "B ne peut pas se déclarer propriétaire à la place de A" "$(status "$B" -X POST -d "{\"nom\":\"vol\",\"poids\":$P,\"owner_id\":\"$(req "$A" "$U/rest/v1/challenges?select=owner_id" | field owner_id)\"}" "$U/rest/v1/challenges")" 403
 
+check "L'inscription libre est fermée" "$(curl -s -m 15 -o /dev/null -w '%{http_code}' -X POST -H "apikey: $K" -H 'Content-Type: application/json' -d '{}' "$U/auth/v1/signup")" 422
 check "Un visiteur non connecté est refusé" "$(curl -s -m 15 -o /dev/null -w '%{http_code}' -H "apikey: $K" "$U/rest/v1/challenges?select=nom")" 401
 
 check "A supprime son challenge" "$(status "$A" -X DELETE "$U/rest/v1/challenges?id=eq.$CID")" 204

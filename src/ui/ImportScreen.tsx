@@ -69,7 +69,7 @@ export function ImportScreen({ onImport }: Props) {
       {error && <p role="alert" className="alert">{error}</p>}
 
       <p className="muted small">
-        Vos idées sont enregistrées dans un espace que seul ce navigateur peut ouvrir. Les noms des auteurs ne sont
+        Vos idées sont enregistrées dans votre espace, accessible avec votre compte. Les noms des auteurs ne sont
         jamais transmis à l'IA de notation.
       </p>
     </section>

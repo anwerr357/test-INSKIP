@@ -2,13 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   createWorkspace,
   deleteWorkspace,
-  ensureSession,
+  hasSession,
   loadWorkspace,
   pairKey,
   replaceShortlist,
   saveDecision,
   saveScore,
   setShortlisted,
+  signIn,
+  signOut,
   type Decision,
   type IdeaScore,
   type StoredIdea,
@@ -22,6 +24,7 @@ import { toScoringInput, type Scorer } from './domain/scoring'
 import { DuplicatesTab } from './ui/DuplicatesTab'
 import { IdeasTab, type IdeaRow } from './ui/IdeasTab'
 import { ImportScreen } from './ui/ImportScreen'
+import { LoginScreen } from './ui/LoginScreen'
 import { ShortlistTab } from './ui/ShortlistTab'
 
 // Le modèle de notation. Aujourd'hui simulé ; un vrai modèle se branche ici, derrière la
@@ -31,13 +34,14 @@ const scorer: Scorer = new MockScorer()
 type Boot =
   | { status: 'loading' }
   | { status: 'error'; message: string }
+  | { status: 'signedOut' }
   | { status: 'ready'; workspace: Workspace | null }
 
 type Tab = 'idees' | 'doublons' | 'shortlist'
 
 async function openWorkspace(): Promise<Boot> {
   try {
-    await ensureSession()
+    if (!(await hasSession())) return { status: 'signedOut' }
     return { status: 'ready', workspace: await loadWorkspace() }
   } catch (cause) {
     return { status: 'error', message: cause instanceof Error ? cause.message : 'Une erreur inattendue est survenue.' }
@@ -64,6 +68,17 @@ export default function App() {
     setBoot((current) =>
       current.status === 'ready' && current.workspace ? { ...current, workspace: change(current.workspace) } : current,
     )
+
+  async function handleSignIn(email: string, password: string) {
+    await signIn(email, password)
+    await load()
+  }
+
+  async function handleSignOut() {
+    await signOut()
+    setRejets([])
+    setBoot({ status: 'signedOut' })
+  }
 
   async function handleImport(nom: string, csv: string) {
     const { ideas, rejets } = importIdeas(csv)
@@ -128,6 +143,11 @@ export default function App() {
               <strong>{view.validated}</strong> {view.validated > 1 ? 'notes validées' : 'note validée'} sur {view.toReview}
             </p>
           )}
+          {boot.status === 'ready' && (
+            <button type="button" className="button header-button" onClick={handleSignOut}>
+              Se déconnecter
+            </button>
+          )}
         </div>
       </header>
 
@@ -142,6 +162,8 @@ export default function App() {
             </button>
           </div>
         )}
+
+        {boot.status === 'signedOut' && <LoginScreen onSignIn={handleSignIn} />}
 
         {boot.status === 'ready' && !workspace && <ImportScreen onImport={handleImport} />}
 

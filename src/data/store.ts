@@ -43,18 +43,31 @@ function check<T>(result: { data: T; error: unknown }, message: string): T {
   return result.data
 }
 
-/**
- * Ouvre une session anonyme si le navigateur n'en a pas déjà une. Pas d'écran de connexion :
- * la session est gardée par le navigateur, qui retrouve ses données à la visite suivante.
- */
-export async function ensureSession(): Promise<void> {
+/** Vrai si ce navigateur a déjà une session ouverte. */
+export async function hasSession(): Promise<boolean> {
   const { data } = await db().auth.getSession()
-  if (data.session) return
-  const { error } = await db().auth.signInAnonymously()
-  if (error) {
-    console.error(error)
-    throw new StoreError("Impossible d'ouvrir votre espace de travail. Vérifiez votre connexion internet, puis réessayez.")
-  }
+  return data.session !== null
+}
+
+/**
+ * Connexion par e-mail et mot de passe. Les comptes sont créés par l'administrateur dans
+ * Supabase : l'outil ne propose ni inscription ni mot de passe oublié.
+ */
+export async function signIn(email: string, password: string): Promise<void> {
+  const { error } = await db().auth.signInWithPassword({ email, password })
+  if (!error) return
+  console.error(error)
+  // 400 : identifiants refusés. Tout le reste est un problème de réseau ou de service.
+  throw new StoreError(
+    error.status === 400
+      ? 'E-mail ou mot de passe incorrect.'
+      : 'La connexion a échoué. Vérifiez votre connexion internet, puis réessayez.',
+  )
+}
+
+export async function signOut(): Promise<void> {
+  // scope local : ferme la session de ce navigateur, pas celles des autres appareils.
+  await db().auth.signOut({ scope: 'local' })
 }
 
 type IdeaRow = {

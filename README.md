@@ -7,7 +7,10 @@ doublons, sortir une shortlist pour le jury.
 
 En ligne : https://test-inskip.vercel.app
 
-Pas de fichier sous la main ? Bouton « Essayer avec l'exemple Hexavia (40 idées) ».
+L'accès demande un compte : les idées contiennent des noms de salariés. Les identifiants de
+démonstration sont dans le mail de rendu, pas dans ce dépôt.
+
+Une fois connecté, pas de fichier sous la main ? Bouton « Essayer avec l'exemple Hexavia (40 idées) ».
 
 | Idées et notation | Doublons | Shortlist |
 |---|---|---|
@@ -25,7 +28,8 @@ npm run dev
 ```
 
 Supabase, une seule fois : exécuter les deux fichiers de `supabase/migrations/` dans le SQL
-Editor, puis activer « Allow anonymous sign-ins ».
+Editor, puis créer un utilisateur (Authentication > Users > Add user). Désactiver les
+inscriptions libres et la connexion anonyme (Authentication > Sign In / Providers).
 
 Tout vérifier : `npm run lint && npm run typecheck && npm test`.
 
@@ -50,10 +54,11 @@ proposée par l'IA qu'elle corrige, les doublons, une shortlist d'environ 8 idé
 | Idées incomplètes | Marquées « à compléter », notées prudemment. |
 | Format client | PDF par l'impression, CSV pour Excel. |
 | Noms des auteurs | Visibles pour Camille. Hors de l'export, sauf case cochée. |
+| Accès à l'outil | Un compte, créé par nous. Pas d'inscription libre : ce sont des données de salariés. |
 
 **V1 :** import, liste filtrable, notation, doublons, classement, shortlist.
 
-**Plus tard :** vrai modèle d'IA, vrai compte utilisateur, réglage des poids à l'écran.
+**Plus tard :** vrai modèle d'IA, partage entre consultants, réglage des poids à l'écran.
 
 ## 2. Conception
 
@@ -69,8 +74,8 @@ Quatre tables : `challenges`, `ideas`, `scores`, `duplicate_pairs`.
 Mes choix :
 
 - **React, TypeScript, Supabase, Vercel.** Votre stack.
-- **Connexion anonyme + RLS.** Une URL, pas de mot de passe. Chacun ne voit que ses données.
-  C'est ce qui protège les noms des salariés.
+- **Connexion par e-mail + RLS.** Pas d'inscription libre : les comptes sont créés dans
+  Supabase. Chacun ne voit que ses données. Deux barrières pour les noms des salariés.
 - **IA simulée derrière `Scorer`.** Pas de clé aujourd'hui. Vrai modèle demain : une
   implémentation de plus, le reste ne bouge pas.
 - **Doublons par comparaison de mots.** Je peux montrer les mots communs. Même résultat à chaque fois.
@@ -142,8 +147,8 @@ lit encore. Il faudra une fonction côté serveur, pour que la clé ne sorte jam
 
 Ce qui manque avant de donner l'outil à Camille :
 
-- **Un vrai compte.** Son travail est lié à son navigateur. Données de navigation effacées,
-  travail perdu. Le point le plus important.
+- **La gestion des comptes.** Un compte se crée à la main dans Supabase. Pas de mot de passe
+  oublié, pas de partage d'un challenge entre deux consultants.
 - **Le vrai modèle.** Les notes simulées sont grossières, surtout l'alignement.
 - **Le réglage des poids.** En base et dans le calcul, pas à l'écran.
 - **Le seuil des doublons.** Réglé sur ce seul fichier, avec quelques synonymes à la main.
@@ -166,11 +171,12 @@ Ce qui manque avant de donner l'outil à Camille :
 | 11:10 | Écrans : import, liste, notation, doublons |
 | 11:25 | Shortlist et exports |
 | 11:35 | Étiquettes de doublon, après essai de l'outil |
+| 11:45 | Connexion par e-mail et mot de passe à la place de l'accès ouvert |
 
 ## 7. Suite et questions pour Camille
 
-Avec une journée de plus, dans l'ordre : connexion par e-mail, vrai modèle avec la stratégie
-du client, réglage des poids à l'écran, commentaire pour le jury sur chaque idée retenue.
+Avec une journée de plus, dans l'ordre : partage d'un challenge entre consultants, vrai modèle
+avec la stratégie du client, réglage des poids à l'écran, commentaire pour le jury sur chaque idée retenue.
 
 Mes questions :
 
