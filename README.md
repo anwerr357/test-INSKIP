@@ -5,7 +5,7 @@ client et sortir une shortlist pour le jury.
 
 ## Aperçu
 
-URL de l'application : _à compléter après le premier déploiement_
+URL de l'application : https://test-inskip.vercel.app
 
 _Captures à ajouter : liste des idées, fiche de notation, shortlist._
 
@@ -107,6 +107,8 @@ _À compléter : configuration, ce qui manque avant de confier l'outil à Camill
 | 20:00 | Détection des doublons : similarité de mots pondérée, seuil calibré sur le fichier, 5 paires proposées |
 | 20:06 | Notation : interface `Scorer`, modèle simulé, contrôle des réponses ; classement pondéré et shortlist |
 | 20:20 | Schéma Supabase et règles RLS (`supabase/migrations/0001_init.sql`) |
+| 21:05 | Test des règles RLS avec deux utilisateurs : un trou trouvé et corrigé (`0002`), script `scripts/test-rls.sh` |
+| 21:20 | Première mise en ligne sur Vercel |
 
 ## 7. Suite et questions pour Camille
 
